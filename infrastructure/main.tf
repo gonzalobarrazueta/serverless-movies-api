@@ -37,3 +37,10 @@ resource "azurerm_cosmosdb_account" "movies-db" {
   offer_type = "Standard"
   kind = "GlobalDocumentDB"
 }
+
+resource "azurerm_ai_services" "ai-movie-summary" {
+  name = "ai-movie-summary-service-${random_integer.random_number.result}"
+  location = azurerm_resource_group.movies-rg.location
+  resource_group = azurerm_resource_group.movies-rg.name
+  sku_name = "S1"
+}
