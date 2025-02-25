@@ -36,11 +36,20 @@ resource "azurerm_cosmosdb_account" "movies-db" {
   resource_group_name = azurerm_resource_group.movies-rg.name
   offer_type = "Standard"
   kind = "GlobalDocumentDB"
+
+  consistency_policy {
+    consistency_level = "Session"
+  }
+
+  geo_location {
+    location = azurerm_resource_group.movies-rg.location
+    failover_priority = 0
+  }
 }
 
 resource "azurerm_ai_services" "ai-movie-summary" {
   name = "ai-movie-summary-service-${random_integer.random_number.result}"
   location = azurerm_resource_group.movies-rg.location
-  resource_group = azurerm_resource_group.movies-rg.name
+  resource_group_name = azurerm_resource_group.movies-rg.name
   sku_name = "S1"
 }
