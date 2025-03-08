@@ -22,7 +22,7 @@ resource "random_integer" "random_number" {
 }
 
 resource "azurerm_storage_account" "movies-storage" {
-  name = "movies-storage-${random_integer.random_number.result}"
+  name = "moviesstorageaccount${random_integer.random_number.result}"
   resource_group_name = azurerm_resource_group.movies-rg.name
   location = azurerm_resource_group.movies-rg.location
   account_kind = "StorageV2"
@@ -47,9 +47,10 @@ resource "azurerm_cosmosdb_account" "movies-db" {
   }
 }
 
-resource "azurerm_ai_services" "ai-movie-summary" {
+resource "azurerm_cognitive_account" "ai_summary_service" {
   name = "ai-movie-summary-service-${random_integer.random_number.result}"
   location = azurerm_resource_group.movies-rg.location
   resource_group_name = azurerm_resource_group.movies-rg.name
-  sku_name = "S1"
+  kind = "CognitiveServices"
+  sku_name = "S0"
 }
