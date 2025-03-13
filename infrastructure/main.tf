@@ -11,9 +11,9 @@ provider "azurerm" {
   features {}
 }
 
-resource "azurerm_resource_group" "movies-rg" {
-  name = "movies-api-project"
-  location = "Central US"
+resource "azurerm_resource_group" "movies" {
+  name = "rg-movies-serverless-api"
+  location = "centralus"
 }
 
 resource "random_integer" "random_number" {
@@ -23,8 +23,8 @@ resource "random_integer" "random_number" {
 
 resource "azurerm_storage_account" "movies-storage" {
   name = "moviesstorageaccount${random_integer.random_number.result}"
-  resource_group_name = azurerm_resource_group.movies-rg.name
-  location = azurerm_resource_group.movies-rg.location
+  resource_group_name = azurerm_resource_group.movies.name
+  location = azurerm_resource_group.movies.location
   account_kind = "StorageV2"
   account_tier = "Standard"
   account_replication_type = "LRS"
@@ -32,8 +32,8 @@ resource "azurerm_storage_account" "movies-storage" {
 
 resource "azurerm_cosmosdb_account" "movies-db" {
   name = "movies-cosmos-db-${random_integer.random_number.result}"
-  location = azurerm_resource_group.movies-rg.location
-  resource_group_name = azurerm_resource_group.movies-rg.name
+  location = azurerm_resource_group.movies.location
+  resource_group_name = azurerm_resource_group.movies.name
   offer_type = "Standard"
   kind = "GlobalDocumentDB"
 
@@ -42,15 +42,15 @@ resource "azurerm_cosmosdb_account" "movies-db" {
   }
 
   geo_location {
-    location = azurerm_resource_group.movies-rg.location
+    location = azurerm_resource_group.movies.location
     failover_priority = 0
   }
 }
 
 resource "azurerm_cognitive_account" "ai_summary_service" {
   name = "ai-movie-summary-service-${random_integer.random_number.result}"
-  location = azurerm_resource_group.movies-rg.location
-  resource_group_name = azurerm_resource_group.movies-rg.name
+  location = azurerm_resource_group.movies.location
+  resource_group_name = azurerm_resource_group.movies.name
   kind = "CognitiveServices"
   sku_name = "S0"
 }
