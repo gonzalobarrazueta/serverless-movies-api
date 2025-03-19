@@ -27,13 +27,19 @@ resource "random_string" "suffix" {
   special = false
 }
 
-resource "azurerm_storage_account" "movies-storage" {
+resource "azurerm_storage_account" "movies" {
   name = "stmovies${random_string.suffix.result}"
   resource_group_name = azurerm_resource_group.movies.name
   location = azurerm_resource_group.movies.location
   account_kind = "StorageV2"
   account_tier = "Standard"
   account_replication_type = "LRS"
+}
+
+resource "azurerm_storage_container" "movies" {
+  name                  = "movie-posters"
+  storage_account_id    = azurerm_storage_account.movies.id
+  container_access_type = "private"
 }
 
 resource "azurerm_cosmosdb_account" "movies-db" {
