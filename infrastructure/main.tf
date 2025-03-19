@@ -21,8 +21,14 @@ resource "random_integer" "random_number" {
   max = 5000
 }
 
+resource "random_string" "suffix" {
+  length = 10
+  upper = false
+  special = false
+}
+
 resource "azurerm_storage_account" "movies-storage" {
-  name = "moviesstorageaccount${random_integer.random_number.result}"
+  name = "stmovies${random_string.suffix.result}"
   resource_group_name = azurerm_resource_group.movies.name
   location = azurerm_resource_group.movies.location
   account_kind = "StorageV2"
