@@ -59,6 +59,45 @@ resource "azurerm_cosmosdb_account" "movies-db" {
   }
 }
 
+resource "azurerm_storage_account" "function-app" {
+  name = "stfuncapp${random_string.suffix.result}"
+  resource_group_name = azurerm_resource_group.movies.name
+  location = azurerm_resource_group.movies.location
+  account_kind = "StorageV2"
+  account_tier = "Standard"
+  account_replication_type = "LRS"
+}
+
+resource "azurerm_service_plan" "movies" {
+  name = "asp-movies-${random_string.suffix.result}"
+  location = azurerm_resource_group.movies.location
+  resource_group_name = azurerm_resource_group.movies.name
+  os_type = "Linux"
+  sku_name = "Y1"
+}
+
+resource "azurerm_linux_function_app" "movies" {
+  name                = "func-movies"
+  resource_group_name = azurerm_resource_group.movies.name
+  location            = azurerm_resource_group.movies.location
+
+  storage_account_name       = azurerm_storage_account.function-app.name
+  storage_account_access_key = azurerm_storage_account.function-app.primary_access_key
+  service_plan_id = azurerm_service_plan.movies.id
+
+  site_config {
+    always_on = false
+  }
+
+  storage_account {
+    account_name = azurerm_storage_account.function-app.name
+    access_key   = azurerm_storage_account.function-app.primary_access_key
+    name         = "func-storage"
+    share_name   = "func-files"
+    type         = "AzureBlob"
+  }
+}
+
 resource "azurerm_cognitive_account" "ai_summary_service" {
   name = "ai-movie-summary-service-${random_integer.random_number.result}"
   location = azurerm_resource_group.movies.location
