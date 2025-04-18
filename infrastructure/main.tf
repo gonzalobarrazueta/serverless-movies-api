@@ -39,7 +39,7 @@ resource "azurerm_storage_account" "movies" {
 resource "azurerm_storage_container" "movies" {
   name                  = "movie-posters"
   storage_account_id    = azurerm_storage_account.movies.id
-  container_access_type = "private"
+  container_access_type = "blob"
 }
 
 resource "azurerm_cosmosdb_account" "movies-db" {
