@@ -77,7 +77,7 @@ resource "azurerm_service_plan" "movies" {
 }
 
 resource "azurerm_linux_function_app" "movies" {
-  name                = "func-movies"
+  name                = "func-movies-${random_string.suffix.result}"
   resource_group_name = azurerm_resource_group.movies.name
   location            = azurerm_resource_group.movies.location
 
@@ -87,6 +87,10 @@ resource "azurerm_linux_function_app" "movies" {
 
   site_config {
     always_on = false
+
+    application_stack {
+      python_version = "3.11"
+    }
   }
 
   storage_account {
