@@ -5,3 +5,4 @@
 azure-functions
 azure-storage-blob>=12.0.0
 huggingface_hub
+azure-cosmos

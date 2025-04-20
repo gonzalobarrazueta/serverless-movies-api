@@ -1,8 +1,10 @@
 from azure.storage.blob import BlobServiceClient, ContentSettings
 from huggingface_hub import InferenceClient
-import azure.functions as func
+from azure.cosmos import CosmosClient
 from io import BytesIO
+import azure.functions as func
 import logging
+import json
 import uuid
 import os
 
@@ -61,6 +63,33 @@ def add_movie(req: func.HttpRequest, outputDocument: func.Out[func.Document]) ->
         return func.HttpResponse(status_code=400)
     else:   
         return func.HttpResponse(f"Movie '{title}' added successfully 📽️", status_code=200)
+    
+@app.route(route="get_movies", methods=["GET"])
+def get_movies(req: func.HttpRequest) -> func.HttpResponse:
+    logging.info('Python HTTP trigger function processed a request.')
+
+    connection_string = os.environ["CosmosDbConnectionSetting"]
+    cosmos_client = CosmosClient.from_connection_string(connection_string)
+
+    try:
+        database_client = cosmos_client.get_database_client("movies")
+        container_client = database_client.get_container_client("movies")
+    except Exception as e:
+        return func.HttpResponse(f'An unexpected error occurred: {str(e)}', status_code=400)
+
+    try:
+        documents = list(container_client.query_items(
+            "SELECT m.title, m.release_year, m.genre, m.poster FROM m",
+            enable_cross_partition_query=True
+            ))
+        movies_json = json.dumps(documents, indent=True)
+        
+        for doc in documents:
+            print(doc)
+        
+        return func.HttpResponse(movies_json, mimetype="application/json", status_code=200)
+    except Exception as e:
+        return func.HttpResponse(f'Error: {e}', status_code=400)
     
 @app.route(route="generate-summary", methods=["POST"])
 def generate_summary(req: func.HttpRequest) -> func.HttpResponse:
