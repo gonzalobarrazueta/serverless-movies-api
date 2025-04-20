@@ -1,4 +1,5 @@
 from azure.storage.blob import BlobServiceClient, ContentSettings
+from huggingface_hub import InferenceClient
 import azure.functions as func
 from io import BytesIO
 import logging
@@ -60,4 +61,47 @@ def add_movie(req: func.HttpRequest, outputDocument: func.Out[func.Document]) ->
         return func.HttpResponse(status_code=400)
     else:   
         return func.HttpResponse(f"Movie '{title}' added successfully 📽️", status_code=200)
+    
+@app.route(route="generate-summary", methods=["POST"])
+def generate_summary(req: func.HttpRequest) -> func.HttpResponse:
+    
+    body = req.get_json()
+
+    movie = body.get('movie')
+    year = body.get('year')
+
+    if not movie or not year:
+        return func.HttpResponse("Movie or year missing from request body", status_code=400)
+
+    client = InferenceClient(
+        provider = 'novita',
+        api_key = os.environ['HuggingFaceAPIKey']
+    )
+
+    try:
+        completion = client.chat.completions.create(
+            model = os.environ['HuggingFaceAIModel'],
+            messages = [
+                {
+                    "role": "user",
+                    "content": f'Write a short summary of the movie {movie} released in {year}. Focus only on the plot, and avoid mentioning actors, directors, source material, or production details. The summary must be concise and no longer than 4 sentences.'
+                }
+            ],
+            max_tokens = 240
+        )
+
+        summary = completion.choices[0].message.content
+        
+        if summary is None:
+            return func.HttpResponse("Oops! Our AI is couldn't summarize that film. Try again in a bit!")
+        else:
+            return func.HttpResponse(summary, status_code=200)
+        
+    except Exception as e:
+        logging.error(f"Failed to generate movie summary: {e}")
+
+        return func.HttpResponse(
+            "Oops! Something went wrong while talking to the AI. Please try again later.",
+            status_code=500
+        )
     
