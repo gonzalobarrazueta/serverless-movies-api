@@ -91,6 +91,37 @@ def get_movies(req: func.HttpRequest) -> func.HttpResponse:
     except Exception as e:
         return func.HttpResponse(f'Error: {e}', status_code=400)
     
+@app.route(route="get_movies_by_year", methods=["GET"])
+def get_movies_by_year(req: func.HttpRequest) -> func.HttpResponse:
+    logging.info('Python HTTP trigger function processed a request.')
+
+    connection_string = os.environ["CosmosDbConnectionSetting"]
+    cosmos_client = CosmosClient.from_connection_string(connection_string)
+
+    database_client = cosmos_client.get_database_client("movies")
+    container_client = database_client.get_container_client("movies")
+    
+    year = req.params.get('year')
+
+    if not year:
+        return func.HttpResponse("Missing 'year' query parameter.", status_code=400)
+
+    try:
+        documents = list(container_client.query_items(
+            "SELECT m.title, m.release_year, m.genre, m.poster FROM m WHERE m.release_year = @year",
+            parameters=[dict(name="@year", value=year)],
+            enable_cross_partition_query=True
+            ))
+        
+        movies_json = json.dumps(documents, indent=True)
+        
+        for doc in documents:
+            print(doc)
+        
+        return func.HttpResponse(movies_json, mimetype="application/json", status_code=200)
+    except Exception as e:
+        return func.HttpResponse(f'Error: {e}', status_code=400)
+
 @app.route(route="generate-summary", methods=["POST"])
 def generate_summary(req: func.HttpRequest) -> func.HttpResponse:
     
